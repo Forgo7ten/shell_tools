@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# 通过进程名关闭进程（慎用！）
+killn() {
+    local pattern=$1 # 捕获传入的第一个参数作为模式
+    if [ -z "$pattern" ]; then
+        echo "Usage: killn <process-name-pattern>"
+        return 1
+    fi
+    local pids=$(ps -ef | grep "$pattern" | grep -v grep | awk '{print $2}')
+    if [ -z "$pids" ]; then
+        echo "No process found matching pattern: $pattern."
+        return 0
+    fi
+
+    echo -e "PID\t| Status\t| Command"
+
+    for pid in $pids; do
+        local cmd=$(ps -p $pid -o command=)
+
+        # 尝试终止进程
+        if kill $pid 2>/dev/null; then
+            echo -e "$pid\t| Terminated\t| $cmd"
+        else
+            echo -e "$pid\t| Failed\t| $cmd"
+            # 不要立即返回，可能有多个进程需要被终止
+        fi
+    done
+}
+
+killn $1

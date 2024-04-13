@@ -1,0 +1,30 @@
+#!/bin/bash
+
+# 通过端口占用关闭进程
+killp() {
+    local PORT=$1
+    if [ -z "$PORT" ]; then
+        echo "Usage: killp <port>"
+        return 1
+    fi
+    local pids=$(lsof -ti tcp:$PORT)
+    if [ -z "$pids" ]; then
+        echo "No process found listening on port $PORT."
+        return 0
+    fi
+
+    echo -e "PID\t| Status\t| Command"
+
+    for pid in $pids; do
+        local cmd=$(ps -p $pid -o command=)
+
+        # 尝试终止进程
+        if kill $pid 2>/dev/null; then
+            echo -e "$pid\t| Success\t| $cmd"
+        else
+            echo -e "$pid\t| Failed\t| $cmd"
+        fi
+    done
+}
+
+killp $1
